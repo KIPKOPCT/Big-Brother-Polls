@@ -18,43 +18,51 @@ const contestants = [
 const MAX_VOTES = 500;
 const VOTE_COST = 100;
 
-/* ===== DATE HELPERS ===== */
+/* ===== DAILY LIMIT (LOCAL) ===== */
 function todayKey() {
   return new Date().toISOString().split("T")[0];
 }
 
-/* ===== INIT ===== */
-function init() {
-  // Init votes
-  if (!localStorage.getItem("votes")) {
-    const v = {};
-    contestants.forEach((c) => (v[c.id] = 0));
-    localStorage.setItem("votes", JSON.stringify(v));
-  }
-
-  // Init daily balance
+function canVote() {
   const today = todayKey();
-  const savedDay = localStorage.getItem("voteDay");
-
-  if (savedDay !== today) {
-    localStorage.setItem("voteBalance", MAX_VOTES);
+  if (localStorage.getItem("voteDay") !== today) {
     localStorage.setItem("voteDay", today);
+    localStorage.setItem("voteBalance", MAX_VOTES);
   }
-
-  renderBars();
-  updateUI();
+  return Number(localStorage.getItem("voteBalance")) >= VOTE_COST;
 }
 
-/* ===== RENDER BARS FROM JS ===== */
-function renderBars() {
+function useVote() {
+  const b = Number(localStorage.getItem("voteBalance"));
+  localStorage.setItem("voteBalance", b - VOTE_COST);
+}
+
+/* ===== FETCH RESULTS ===== */
+async function loadResults() {
+  const res = await fetch("/api/results");
+  const votes = await res.json();
+  renderBars(votes);
+}
+
+/* ===== RENDER SORTED ===== */
+function renderBars(votes) {
   const bars = document.querySelector(".bars");
   bars.innerHTML = "";
 
-  contestants.forEach((c) => {
+  const total = Object.values(votes).reduce((a, b) => a + b, 0) || 1;
+
+  const sorted = [...contestants].sort(
+    (a, b) => (votes[b.id] || 0) - (votes[a.id] || 0),
+  );
+
+  sorted.forEach((c) => {
+    const value = votes[c.id] || 0;
+    const percent = ((value / total) * 40).toFixed(1);
+
     bars.innerHTML += `
       <div class="bar-wrapper">
-        <div class="percent" id="p-${c.id}">0%</div>
-        <div class="bar" id="b-${c.id}"></div>
+        <div class="percent">${percent}%</div>
+        <div class="bar" style="height:${percent * 7}px"></div>
         <div>${c.label}</div>
         <button class="vote-btn" onclick="vote('${c.id}')">Vote</button>
       </div>
@@ -63,45 +71,23 @@ function renderBars() {
 }
 
 /* ===== VOTE ===== */
-function vote(id) {
-  let balance = Number(localStorage.getItem("voteBalance"));
-  if (balance < VOTE_COST) {
-    alert("You have used all your votes for today.");
+async function vote(id) {
+  if (!canVote()) {
+    alert("You have used all your votes today.");
     return;
   }
 
-  const votes = JSON.parse(localStorage.getItem("votes"));
-  votes[id] += VOTE_COST;
+  useVote();
 
-  localStorage.setItem("votes", JSON.stringify(votes));
-  localStorage.setItem("voteBalance", balance - VOTE_COST);
-
-  updateUI();
-}
-
-/* ===== UPDATE UI ===== */
-function updateUI() {
-  const votes = JSON.parse(localStorage.getItem("votes")) || {};
-
-  // Make sure ALL contestants exist in votes
-  contestants.forEach((c) => {
-    if (typeof votes[c.id] !== "number") {
-      votes[c.id] = 0;
-    }
+  await fetch("/api/vote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
   });
 
-  // Save back in case new people were added
-  localStorage.setItem("votes", JSON.stringify(votes));
-
-  const total = Object.values(votes).reduce((a, b) => a + b, 0) || 1;
-
-  contestants.forEach((c) => {
-    const value = votes[c.id] || 0;
-    const percent = ((value / total) * 40).toFixed(1);
-
-    document.getElementById("p-" + c.id).innerText = percent + "%";
-    document.getElementById("b-" + c.id).style.height = percent * 7 + "px";
-  });
+  loadResults();
 }
 
-init();
+/* ===== INIT ===== */
+loadResults();
+setInterval(loadResults, 5000); // auto-sync every 5s
