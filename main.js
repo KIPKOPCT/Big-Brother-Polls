@@ -39,15 +39,36 @@ function useVote() {
 
 /* ===== FETCH RESULTS ===== */
 async function loadResults() {
-  const res = await fetch("/api/results");
-  const votes = await res.json();
-  renderBars(votes);
+  try {
+    // For testing without a backend, use mock data
+    // Comment this out when your API is ready
+    const mockVotes = generateMockVotes();
+    renderBars(mockVotes);
+
+    // Uncomment this when your API is ready
+    // const res = await fetch("/api/results");
+    // const votes = await res.json();
+    // renderBars(votes);
+  } catch (error) {
+    console.error("Error loading results:", error);
+  }
+}
+
+// Generate mock votes for testing
+function generateMockVotes() {
+  const votes = {};
+  contestants.forEach((c) => {
+    votes[c.id] = Math.floor(Math.random() * 100);
+  });
+  return votes;
 }
 
 /* ===== RENDER SORTED ===== */
 function renderBars(votes) {
-  const bars = document.querySelector(".bars");
-  bars.innerHTML = "";
+  const barsContainer = document.getElementById("bars-container");
+  if (!barsContainer) return;
+
+  barsContainer.innerHTML = "";
 
   const total = Object.values(votes).reduce((a, b) => a + b, 0) || 1;
 
@@ -57,16 +78,20 @@ function renderBars(votes) {
 
   sorted.forEach((c) => {
     const value = votes[c.id] || 0;
-    const percent = ((value / total) * 40).toFixed(1);
+    const percent = ((value / total) * 100).toFixed(1);
+    // Max height 200px, min height 10px
+    const barHeight = Math.max(10, percent * 2);
 
-    bars.innerHTML += `
-      <div class="bar-wrapper">
-        <div class="percent">${percent}%</div>
-        <div class="bar" style="height:${percent * 7}px"></div>
-        <div>${c.label}</div>
-        <button class="vote-btn" onclick="vote('${c.id}')">Vote</button>
-      </div>
+    const barWrapper = document.createElement("div");
+    barWrapper.className = "bar-wrapper";
+    barWrapper.innerHTML = `
+      <div class="percent">${percent}%</div>
+      <div class="bar" style="height:${barHeight}px"></div>
+      <div>${c.label}</div>
+      <button class="vote-btn" onclick="vote('${c.id}')">Vote</button>
     `;
+
+    barsContainer.appendChild(barWrapper);
   });
 }
 
@@ -79,15 +104,29 @@ async function vote(id) {
 
   useVote();
 
-  await fetch("/api/vote", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id }),
-  });
+  try {
+    // Uncomment when API is ready
+    // await fetch("/api/vote", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ id }),
+    // });
 
-  loadResults();
+    // For testing without backend
+    console.log(`Voted for: ${id}`);
+    alert(
+      `Voted for ${id}! Votes remaining: ${localStorage.getItem("voteBalance")}`,
+    );
+
+    loadResults();
+  } catch (error) {
+    console.error("Error voting:", error);
+  }
 }
 
 /* ===== INIT ===== */
-loadResults();
-setInterval(loadResults, 5000); // auto-sync every 5s
+// Make sure DOM is loaded before running
+document.addEventListener("DOMContentLoaded", () => {
+  loadResults();
+  setInterval(loadResults, 5000); // auto-sync every 5s
+});

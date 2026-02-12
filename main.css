@@ -1,109 +1,9 @@
-* {
-  box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-body {
-  margin: 0;
-  background: radial-gradient(circle at center, #0b1a3a, #020816);
-  color: white;
-}
-
-/* ===== HEADER ===== */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 40px;
-  gap: 1rem;
-}
-
-.header h1 {
-  margin: 0;
-}
-
-.header-notes {
-    font-size: 16px;
-}
-.logo-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-.logo-box img {
-    width: 100px;
-}
-
-/* ===== POLL SECTION ===== */
-.poll-section {
-  position: relative;
-  padding: 40px;
-}
-
-/* Background circles */
-.poll-section::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle, transparent 55%, rgba(255,255,255,0.1) 56%, transparent 57%),
-    radial-gradient(circle, transparent 70%, rgba(255,255,255,0.08) 71%, transparent 72%);
-  pointer-events: none;
-}
-
-.poll-title {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.chart-area {
-  display: flex;
-}
-
-/* Left percentages */
-.y-axis {
-  width: 60px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  text-align: right;
-  padding-right: 10px;
-}
-
-.y-axis span {
-  opacity: 0.7;
-}
-
-/* Chart */
-.chart {
-  flex: 1;
-  position: relative;
-  height: 300px;
-  border-left: 2px solid white;
-  border-bottom: 2px solid white;
-}
-
-/* Horizontal lines */
-.line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(255,255,255,0.3);
-}
-
-.line.l40 { top: 0%; }
-.line.l30 { top: 25%; }
-.line.l20 { top: 50%; }
-.line.l10 { top: 75%; }
-
 /* ===== SCROLLABLE GRAPH ===== */
 .scroll-chart {
   overflow-x: auto;
   overflow-y: hidden;
+  position: relative;
+  height: 400px; /* Fixed height */
 }
 
 .scroll-chart::-webkit-scrollbar {
@@ -119,100 +19,80 @@ body {
   background: rgba(255,255,255,0.1);
 }
 
-/* Bars row wider than container */
-.bars {
-  min-width: 700px;
-}
-
-/* Each bar spacing stays clean */
-.bar-wrapper {
-  flex-shrink: 0;
-}
-
-
-/* Bars */
-.bars {
+/* Bars container - wider than parent for scrolling */
+.bars-container {
   display: flex;
   justify-content: space-around;
   align-items: flex-end;
   height: 100%;
-  padding: 0 40px;
-  gap: 1rem;
+  min-width: 1400px; /* Ensures horizontal scrolling */
+  padding: 0 20px;
+  gap: 15px;
+  position: relative;
+  z-index: 10;
 }
 
+/* Individual bar wrapper */
 .bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  width: 120px;
+  width: 90px;
+  flex-shrink: 0;
 }
 
+/* Bar styling */
 .bar {
-  width: 100%;
+  width: 60px;
   height: 0;
-  background: linear-gradient(to top, #19ff00, #ffe600);
-  border-radius: 0px 0px 0 0;
-  transition: height 0.5s;
+  background: linear-gradient(to top, #00c9ff, #92fe9d);
+  border-radius: 6px 6px 0 0;
+  transition: height 0.5s ease;
+  margin: 5px 0;
+  box-shadow: 0 0 20px rgba(0, 201, 255, 0.3);
 }
 
+/* Percent label */
 .percent {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-weight: bold;
+  color: #fff;
+  font-size: 14px;
 }
 
+/* Contestant name */
+.bar-wrapper > div:nth-child(3) {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 5px 0;
+  color: #fff;
+  max-width: 80px;
+  word-wrap: break-word;
+}
+
+/* Vote button */
 .vote-btn {
   margin-top: 8px;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 20px;
   border: none;
   cursor: pointer;
-  background: #1e90ff;
+  background: linear-gradient(45deg, #c2187a, #7b1fa2);
   color: white;
+  font-weight: bold;
+  font-size: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.vote-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(194, 24, 122, 0.4);
 }
 
 .vote-btn:disabled {
   background: gray;
-}
-
-/* ===== HOUSEMATES ===== */
-.housemates {
-  padding: 50px 40px;
-}
-
-.housemates h2 {
-  margin-bottom: 30px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-}
-
-.card {
-  background: linear-gradient(to top, #c2187a, #7b1fa2);
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.card img {
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
-}
-
-.card-name {
-  padding: 12px;
-  text-align: center;
-  font-weight: bold;
-}
-
-footer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    text-align: center;
-}
-
-footer p span {
-    color: #7b1fa2;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
 }
